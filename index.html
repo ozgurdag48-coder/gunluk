@@ -488,7 +488,7 @@
             // Excel'in Türkçe karakter sorunu yaşamaması için UTF-8 XML şablonu
             const excelSablonu = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head><meta charset="UTF-8"></head>
+                <head><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
                 <body>${veriHtml}</body>
                 </html>
             `;
