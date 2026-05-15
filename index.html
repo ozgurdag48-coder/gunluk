@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim ve Raporlama Paneli</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f5f7fb;
+        }
+
+        /* Sol Menü Tasarımı */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 20px;
+            letter-spacing: 1px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: #b8c7ce;
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .menu-btn:hover, .menu-btn.active {
+            background-color: #34495e;
+            color: white;
+            border-left: 4px solid #3498db;
+        }
+
+        /* Sağ İçerik Alanı */
+        .content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .page {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        h3 {
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #eceff1;
+            padding-bottom: 10px;
+        }
+
+        /* Form Elemanları */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .input-style {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: border 0.3s;
+        }
+
+        .input-style:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .todo-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .todo-item {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-left: 3px solid #2ecc71;
+            margin-bottom: 5px;
+            border-radius: 0 4px 4px 0;
+            font-size: 14px;
+        }
+
+        /* Katılımcı Listesi */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        /* Butonlar */
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: normal;
+            background: #f1f2f6;
+            padding: 10px 20px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+
+        .radio-label:hover {
+            background: #e4e7eb;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        /* Raporlama Buton Grubu */
+        .butor-grubu {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        /* Dinamik Alanlar */
+        #mesaiAciklamaAlani {
+            display: none;
+            margin-top: 15px;
+        }
+
+        /* Raporlama Seçenekleri */
+        .rapor-filtreler {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            margin-bottom: 25px;
+        }
+
+        .rapor-filtreler .form-group {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        /* Tablo Tasarımı */
+        .table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>YÖNETİM</h2>
+        <button class="menu-btn active" onclick="switchPage('gunluk-isler', this)">Günlük İşler</button>
+        <button class="menu-btn" onclick="switchPage('raporlama', this)">Raporlama</button>
+    </div>
+
+    <div class="content">
+        
+        <div id="gunluk-isler" class="page active">
+            <h3>Günlük İşler Girişi</h3>
+            
+            <div class="form-group">
+                <label for="kayitTarihi">Kayıt Tarihi:</label>
+                <input type="date" id="kayitTarihi" class="input-style" style="width: auto;">
+            </div>
+
+            <div class="form-group">
+                <label for="todoInput">Yapılan İşler (Yazıp Enter'a basın):</label>
+                <input type="text" id="todoInput" class="input-style" placeholder="Yapılan işi girin ve Enter tuşuna basın...">
+                <ul id="todoList" class="todo-list"></ul>
+            </div>
+
+            <div class="form-group">
+                <label>Katılımcılar:</label>
+                <div class="checkbox-grid">
+                    <label class="checkbox-label"><input type="checkbox" name="katilimci" value="MEHMET KUZU"> MEHMET KUZU</label>
+                    <label class="checkbox-label"><input type="checkbox" name="katilimci" value="KAYHAN SEZGİN"> KAYHAN SEZGİN</label>
+                    <label class="checkbox-label"><input type="checkbox" name="katilimci" value="ÖZGÜR TÜRKKAL"> ÖZGÜR TÜRKKAL</label>
+                    <label class="checkbox-label"><input type="checkbox" name="katilimci" value="ÖZGÜR DAĞ"> ÖZGÜR DAĞ</label>
+                    <label class="checkbox-label"><input type="checkbox" name="katilimci" value="MUSTAFA ADIŞANLI"> MUSTAFA ADIŞANLI</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Mesai Durumu:</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="mesai" value="Kalınmadı" checked onclick="toggleMesaiKutusu(false)"> Mesaiye Kalınmadı
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="mesai" value="Kalındı" onclick="toggleMesaiKutusu(true)"> Mesaiye Kalındı
+                    </label>
+                </div>
+                
+                <div id="mesaiAciklamaAlani">
+                    <label for="mesaiDetay">Mesai / Katılım Detayı:</label>
+                    <input type="text" id="mesaiDetay" class="input-style" placeholder="Mesai açıklaması giriniz...">
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="veriyiKaydet()">Kaydet</button>
+        </div>
+
+        <div id="raporlama" class="page">
+            <h3>Raporlama Ekranı</h3>
+            
+            <div class="rapor-filtreler">
+                <div class="form-group">
+                    <label for="raporTipi">Rapor Türü:</label>
+                    <select id="raporTipi" class="input-style" onchange="raporTuruDegisti()">
+                        <option value="gunluk">Günlük Rapor (Tek Gün)</option>
+                        <option value="aylik">Aylık Rapor (Tarih Aralığı)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="baslangicGrup">
+                    <label id="tarihEtiket" for="basTarih">Tarih Seçimi:</label>
+                    <input type="date" id="basTarih" class="input-style">
+                </div>
+
+                <div class="form-group" id="bitisGrup" style="display: none;">
+                    <label for="bitTarih">Bitiş Tarihi:</label>
+                    <input type="date" id="bitTarih" class="input-style">
+                </div>
+
+                <div class="butor-grubu">
+                    <button class="btn-primary" onclick="raporOlustur()">Raporla</button>
+                    <button class="btn-success" onclick="exceleAktar()">Dışa Aktar (Excel)</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="raporTablosu">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Yapılan İşler</th>
+                            <th>Katılımcılar</th>
+                            <th>Mesai Durumu</th>
+                            <th>Mesai Detayı</th>
+                        </tr>
+                    </thead>
+                    <tbody id="raporGövde">
+                        <tr>
+                            <td colspan="5" style="text-align:center; color:#888;">Lütfen kriterleri seçip Raporla butonuna basın.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Örnek başlangıç verileri
+        let veriTabani = [
+            { tarih: "2026-05-10", isler: ["Sistem bakımı yapıldı", "Sunucu güncellendi"], katilimcilar: ["MEHMET KUZU", "ÖZGÜR DAĞ"], mesai: "Kalındı", detay: "Acil sunucu müdahalesi" },
+            { tarih: "2026-05-14", isler: ["Haftalık olağan toplantı tamamlandı"], katilimcilar: ["KAYHAN SEZGİN", "MUSTAFA ADIŞANLI", "ÖZGÜR TÜRKKAL"], mesai: "Kalınmadı", detay: "" }
+        ];
+
+        // Bugünün tarihlerini inputlara atama
+        document.getElementById('kayitTarihi').valueAsDate = new Date();
+        document.getElementById('basTarih').valueAsDate = new Date();
+        document.getElementById('bitTarih').valueAsDate = new Date();
+
+        // Sayfa Değiştirme Fonksiyonu
+        function switchPage(pageId, button) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            button.classList.add('active');
+        }
+
+        // Enter ile yapılan iş satırı ekleme
+        const todoInput = document.getElementById('todoInput');
+        const todoList = document.getElementById('todoList');
+        let girilenIsler = [];
+
+        todoInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = this.value.trim();
+                if (value !== '') {
+                    girilenIsler.push(value);
+                    const li = document.createElement('li');
+                    li.className = 'todo-item';
+                    li.textContent = value;
+                    todoList.appendChild(li);
+                    this.value = '';
+                }
+            }
+        });
+
+        // Mesai durumuna göre alttaki text box'ı göster/gizle
+        function toggleMesaiKutusu(show) {
+            const alan = document.getElementById('mesaiAciklamaAlani');
+            alan.style.display = show ? 'block' : 'none';
+            if(!show) document.getElementById('mesaiDetay').value = '';
+        }
+
+        // Verileri Hafızaya Kaydetme
+        function veriyiKaydet() {
+            const tarih = document.getElementById('kayitTarihi').value;
+            const mesai = document.querySelector('input[name="mesai"]:checked').value;
+            const detay = document.getElementById('mesaiDetay').value;
+            
+            const katilimcilar = [];
+            document.querySelectorAll('input[name="katilimci"]:checked').forEach(cb => {
+                katilimcilar.push(cb.value);
+            });
+
+            if (girilenIsler.length === 0) {
+                alert("Lütfen en az bir yapılan iş girip Enter'a basın.");
+                return;
+            }
+
+            veriTabani.push({
+                tarih: tarih,
+                isler: [...girilenIsler],
+                katilimcilar: katilimcilar,
+                mesai: mesai,
+                detay: detay
+            });
+
+            alert("Veriler başarıyla kaydedildi!");
+
+            // Form temizliği
+            girilenIsler = [];
+            todoList.innerHTML = '';
+            document.getElementById('mesaiDetay').value = '';
+            document.querySelectorAll('input[name="katilimci"]').forEach(cb => cb.checked = false);
+            document.querySelector('input[name="mesai"][value="Kalınmadı"]').checked = true;
+            toggleMesaiKutusu(false);
+        }
+
+        // Rapor Türü Değişimi kontrolü
+        function raporTuruDegisti() {
+            const tip = document.getElementById('raporTipi').value;
+            const bitisGrup = document.getElementById('bitisGrup');
+            const tarihEtiket = document.getElementById('tarihEtiket');
+
+            if (tip === 'gunluk') {
+                bitisGrup.style.display = 'none';
+                tarihEtiket.textContent = "Tarih Seçimi:";
+            } else {
+                bitisGrup.style.display = 'block';
+                tarihEtiket.textContent = "Başlangıç Tarihi:";
+            }
+        }
+
+        // Raporu Listeleme Fonksiyonu
+        function raporOlustur() {
+            const tip = document.getElementById('raporTipi').value;
+            const basTarih = document.getElementById('basTarih').value;
+            const bitTarih = document.getElementById('bitTarih').value;
+            const govde = document.getElementById('raporGövde');
+            
+            govde.innerHTML = ''; 
+
+            let filtrelenmisVeri = veriTabani.filter(item => {
+                if (tip === 'gunluk') {
+                    return item.tarih === basTarih;
+                } else {
+                    return item.tarih >= basTarih && item.tarih <= bitTarih;
+                }
+            });
+
+            if (filtrelenmisVeri.length === 0) {
+                govde.innerHTML = `<tr><td colspan="5" style="text-align:center;">Seçilen tarihte kayıtlı veri bulunamadı.</td></tr>`;
+                return;
+            }
+
+            filtrelenmisVeri.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.tarih}</td>
+                    <td>${item.isler.join(', ')}</td>
+                    <td>${item.katilimcilar.length > 0 ? item.katilimcilar.join(', ') : 'Katılım Yok'}</td>
+                    <td>${item.mesai}</td>
+                    <td>${item.detay || '-'}</td>
+                `;
+                govde.appendChild(tr);
+            });
+        }
+
+        // Dışa Aktar (Excel Dosyası Olarak Kaydetme)
+        function exceleAktar() {
+            const tablo = document.getElementById('raporTablosu');
+            const veriHtml = tablo.outerHTML;
+
+            // Excel'in Türkçe karakter sorunu yaşamaması için UTF-8 XML şablonu
+            const excelSablonu = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="UTF-8"></head>
+                <body>${veriHtml}</body>
+                </html>
+            `;
+
+            const blob = new Blob([excelSablonu], { type: 'application/vnd.ms-excel' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rapor_${new Date().toISOString().slice(0,10)}.xls`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
