@@ -350,9 +350,11 @@
 
     <script>
         // Örnek başlangıç verileri
+        // Eklenen Değişiklik: Manuel girilen ilk veriye 'manuelKayit: true' eklendi. 
+        // İstemediğiniz otomatik toplantı kaydında bu etiket olmadığı için artık listelenmeyecek.
         let veriTabani = [
-            { tarih: "2026-05-10", isler: ["Sistem bakımı yapıldı", "Sunucu güncellendi"], katilimcilar: ["MEHMET KUZU", "ÖZGÜR DAĞ"], mesai: "Kalındı", detay: "Acil sunucu müdahalesi" },
-            { tarih: "2026-05-14", isler: ["Haftalık olağan toplantı tamamlandı"], katilimcilar: ["KAYHAN SEZGİN", "MUSTAFA ADIŞANLI", "ÖZGÜR TÜRKKAL"], mesai: "Kalınmadı", detay: "" }
+            { tarih: "2026-05-10", isler: ["Sistem bakımı yapıldı", "Sunucu güncellendi"], katilimcilar: ["MEHMET KUZU", "ÖZGÜR DAĞ"], mesai: "Kalındı", detay: "Acil sunucu müdahalesi", manuelKayit: true },
+            { tarih: "2026-05-14", isler: ["Haftalık olağan toplantı tamamlandı"], katilimcilar: ["KAYHAN SEZGİN", "MUSTAFA ADIŞANLI", "ÖZGÜR TÜRKKAL"], mesai: "Kalınmadı", detay: "" } // Bu otomatik farz edilen veri
         ];
 
         // Bugünün tarihlerini inputlara atama
@@ -411,12 +413,14 @@
                 return;
             }
 
+            // EKLEME: Form üzerinden elle eklenen verilere 'manuelKayit: true' veriyoruz.
             veriTabani.push({
                 tarih: tarih,
                 isler: [...girilenIsler],
                 katilimcilar: katilimcilar,
                 mesai: mesai,
-                detay: detay
+                detay: detay,
+                manuelKayit: true 
             });
 
             alert("Veriler başarıyla kaydedildi!");
@@ -454,7 +458,10 @@
             
             govde.innerHTML = ''; 
 
+            // DEĞİŞİKLİK: Filtreleme kuralına 'item.manuelKayit === true' şartı eklendi.
             let filtrelenmisVeri = veriTabani.filter(item => {
+                if (item.manuelKayit !== true) return false; // Manuel girilmeyen otomatik dataları doğrudan eler.
+
                 if (tip === 'gunluk') {
                     return item.tarih === basTarih;
                 } else {
@@ -485,13 +492,11 @@
             const tablo = document.getElementById('raporTablosu');
             const veriHtml = tablo.outerHTML;
 
-            // Excel'in Türkçe karakter sorunu yaşamaması için UTF-8 XML şablonu
             const excelSablonu = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-                <head><meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<meta name="mobile-web-app-capable" content="yes"></head>
+                <head>
+                    <meta charset="UTF-8">
+                </head>
                 <body>${veriHtml}</body>
                 </html>
             `;
