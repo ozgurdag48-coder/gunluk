@@ -18,9 +18,10 @@
             color: #333;
             height: 100vh;
             overflow: hidden;
+            flex-direction: row; /* Varsayılan yan yana (Masaüstü) */
         }
 
-        /* Sol Menü / Sidebar */
+        /* Sol Menü / Sidebar (Masaüstü için varsayılan) */
         .sidebar {
             width: 260px;
             background-color: #1e293b;
@@ -68,7 +69,7 @@
             font-weight: 600;
         }
 
-        /* Ana İçerik Alanı - Genişletildi ve Esnek Yapıldı */
+        /* Ana İçerik Alanı */
         .main-content {
             flex: 1;
             padding: 40px;
@@ -76,11 +77,11 @@
             height: 100vh;
         }
 
-        /* Sayfa Düzeni Geniş Ekranlar İçin Tam Genişlik Yapıldı */
+        /* Sayfa Düzeni */
         .page {
             display: none;
             width: 100%;
-            max-width: 100%; /* Sınırlandırılmış genişlik kaldırıldı, ekrana yayılacak */
+            max-width: 100%;
             background: #fff;
             padding: 40px;
             border-radius: 12px;
@@ -99,7 +100,7 @@
             padding-bottom: 15px;
         }
 
-        /* Form Elemanları ve Geniş Veri Giriş Alanları */
+        /* Form Elemanları */
         .form-group {
             margin-bottom: 25px;
         }
@@ -117,7 +118,7 @@
         textarea,
         input[type="text"] {
             width: 100%;
-            padding: 14px 16px; /* İç boşluklar artırıldı, metin girişleri rahatlatıldı */
+            padding: 14px 16px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
             font-size: 16px;
@@ -127,7 +128,6 @@
             background-color: #fff;
         }
 
-        /* İş açıklaması alanı özellikle büyütüldü */
         textarea {
             resize: vertical;
             min-height: 150px; 
@@ -208,7 +208,7 @@
             padding: 20px;
             border-radius: 8px;
             align-items: flex-end;
-            flex-wrap: wrap; /* Küçük ekranlarda esnemesi için */
+            flex-wrap: wrap;
         }
 
         .filter-group {
@@ -216,7 +216,7 @@
             min-width: 200px;
         }
 
-        /* Tablo Tasarımı (Ekran Genişledikçe Tam Oturur) */
+        /* Tablo Tasarımı */
         .table-responsive {
             overflow-x: auto;
             margin-top: 25px;
@@ -247,9 +247,8 @@
             background-color: #f8fafc;
         }
 
-        /* Rapor Tablosundaki Açıklama Sütununu Geniş Tutmak İçin */
         td:nth-child(3) {
-            min-width: 300px;
+            min-width: 250px;
             max-width: 600px;
             word-break: break-word;
         }
@@ -284,11 +283,71 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        /* ========================================== */
+        /* MOBİL VE TABLET UYUMLULUK AYARLARI (MEDIA QUERY) */
+        /* ========================================== */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column; /* Menü üstte, içerik altta olacak */
+            }
+
+            .sidebar {
+                width: 100%; /* Sol menü tam genişlik kaplayacak */
+                height: auto;
+                flex-direction: row; /* Butonlar yan yana sıralanacak */
+                padding: 10px;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .sidebar-title {
+                display: none; /* Başlığı mobilde gizleyerek yer açıyoruz */
+            }
+
+            .menu-btn {
+                padding: 12px;
+                text-align: center;
+                justify-content: center;
+                font-size: 14px;
+                border-radius: 6px;
+                width: 48%; /* İki buton yan yana eşit sığacak */
+            }
+
+            .main-content {
+                padding: 15px; /* Mobilde kenar boşluklarını küçültüyoruz */
+                height: calc(100vh - 60px); /* Kalan alanı içeriğe veriyoruz */
+            }
+
+            .page {
+                padding: 20px; /* İçerik kutusunun iç boşluğunu azaltıyoruz */
+            }
+
+            h2 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+
+            .filter-panel {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .btn {
+                width: 100%; /* Mobilde butonlar tam genişlik basılsın */
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Sol Menü -->
     <div class="sidebar">
         <div class="sidebar-title">İŞ TAKİP PANELİ</div>
         <button class="menu-btn active" onclick="switchPage('kayit-sayfasi', this)">
@@ -299,13 +358,10 @@
         </button>
     </div>
 
-    <!-- Ana İçerik Alanı -->
     <div class="main-content">
         
-        <!-- BİLDİRİM KUTUSU -->
         <div id="notification" class="notification">İşlem başarıyla kaydedildi!</div>
 
-        <!-- SÜREÇ 1: KAYIT SAYFASI -->
         <div id="kayit-sayfasi" class="page active">
             <h2>Günlük İş Kaydı Formu</h2>
             <form id="isKayitFormu" onsubmit="kaydetVeri(event)">
@@ -339,7 +395,6 @@
                     </div>
                 </div>
 
-                <!-- Dinamik Açılan Mesai Detay Alanı -->
                 <div id="mesaiDetayPanel" class="mesai-container">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="mesaiSureAciklama">Mesai Süresi ve Açıklaması</label>
@@ -353,7 +408,6 @@
             </form>
         </div>
 
-        <!-- SÜREÇ 2: RAPORLAMA SAYFASI -->
         <div id="rapor-sayfasi" class="page">
             <h2>Raporlama ve Analiz</h2>
             
@@ -371,7 +425,7 @@
                     <input type="date" id="filtreTarih" onchange="listeleRapor()">
                 </div>
                 <div>
-                    <button class="btn btn-success" onclick="raporuDisaAktar()">📥 Raporu Dışa Aktar (CSV)</button>
+                    <button class="btn btn-success" onclick="raporuDisaAktar()">📥 Raporu Dışa Aktar</button>
                 </div>
             </div>
 
@@ -387,8 +441,7 @@
                         </tr>
                     </thead>
                     <tbody id="raporDataBody">
-                        <!-- Veriler JS ile dinamik eklenecek -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -396,11 +449,9 @@
     </div>
 
     <script>
-        // Sayfa yüklendiğinde bugünün tarihini otomatik ata
         document.getElementById('isTarihi').valueAsDate = new Date();
         document.getElementById('filtreTarih').valueAsDate = new Date();
 
-        // DATABASE STRATEJİSİ (LocalStorage Kullanımı)
         function getDatabase() {
             const db = localStorage.getItem('isTakipDB');
             return db ? JSON.parse(db) : [];
@@ -410,7 +461,6 @@
             localStorage.setItem('isTakipDB', JSON.stringify(data));
         }
 
-        // Sayfa Değiştirme Fonksiyonu
         function switchPage(pageId, element) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
@@ -419,7 +469,6 @@
             element.classList.add('active');
         }
 
-        // Mesai Checkbox Kontrolü
         function toggleMesaiAlani() {
             const checkbox = document.getElementById('mesaiKaldı');
             const detayPanel = document.getElementById('mesaiDetayPanel');
@@ -435,7 +484,6 @@
             }
         }
 
-        // Form verisini kaydetme
         function kaydetVeri(event) {
             event.preventDefault();
 
@@ -458,13 +506,11 @@
             db.push(yeniKayit);
             saveDatabase(db);
 
-            // Formu Sıfırla
             document.getElementById('isKayitFormu').reset();
             document.getElementById('isTarihi').valueAsDate = new Date();
             document.getElementById('mesaiDetayPanel').style.display = 'none';
             document.getElementById('mesaiSureAciklama').removeAttribute('required');
 
-            // Bildirim Göster
             showNotification();
         }
 
@@ -476,11 +522,10 @@
             }, 3000);
         }
 
-        // Filtre Tipi Güncelleme
         function filtreGuncelle() {
             const filtreTipi = document.getElementById('filtreTipi').value;
             const filtreTarih = document.getElementById('filtreTarih');
-            const面tarihFiltreGrup = document.getElementById('tarihFiltreGrup');
+            const tarihFiltreGrup = document.getElementById('tarihFiltreGrup');
             const tarihLabel = document.getElementById('tarihLabel');
 
             if (filtreTipi === 'tum') {
@@ -502,7 +547,6 @@
             listeleRapor();
         }
 
-        // Rapor Listeleme
         function listeleRapor() {
             const db = getDatabase();
             const filtreTipi = document.getElementById('filtreTipi').value;
@@ -514,7 +558,7 @@
 
             const filtrelenmişVeri = db.filter(kayit => {
                 if (filtreTipi === 'tum') return true;
-                if (!filtreTarihDeger) return true;
+                if (!val = filtreTarihDeger) return true;
                 
                 if (filtreTipi === 'gunluk') {
                     return kayit.tarih === filtreTarihDeger;
@@ -545,7 +589,6 @@
             });
         }
 
-        // CSV Olarak Dışa Aktarma
         function raporuDisaAktar() {
             const db = getDatabase();
             if(db.length === 0) {
