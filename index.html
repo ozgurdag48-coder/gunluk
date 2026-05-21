@@ -128,6 +128,25 @@
             background-color: #fff;
         }
 
+        /* Çoklu seçim alanı için özel yükseklik ayarı */
+        select[multiple] {
+            height: auto;
+            min-height: 130px;
+            padding: 8px;
+        }
+
+        select[multiple] option {
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        select[multiple] option:checked {
+            background: #3b82f6 linear-gradient(0deg, #3b82f6 0%, #3b82f6 100%);
+            color: #fff;
+        }
+
         textarea {
             resize: vertical;
             min-height: 150px; 
@@ -136,6 +155,13 @@
         input:focus, select:focus, textarea:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .form-help {
+            display: block;
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 6px;
         }
 
         /* Checkbox Alanı */
@@ -245,6 +271,10 @@
 
         tr:hover {
             background-color: #f8fafc;
+        }
+
+        td:nth-child(2) {
+            min-width: 150px;
         }
 
         td:nth-child(3) {
@@ -371,14 +401,14 @@
 
                 <div class="form-group">
                     <label for="katilimci">Katılımcı Seçimi</label>
-                    <select id="katilimci" required>
-                        <option value="">-- Personel Seçiniz --</option>
+                    <select id="katilimci" multiple required>
                         <option value="ÖZGÜR DAĞ">ÖZGÜR DAĞ</option>
                         <option value="ÖZGÜR TÜRKKAL">ÖZGÜR TÜRKKAL</option>
                         <option value="MUSTAFA ADIŞANLI">MUSTAFA ADIŞANLI</option>
                         <option value="MEHMET KUZU">MEHMET KUZU</option>
                         <option value="KAYHAN SEZGİN">KAYHAN SEZGİN</option>
                     </select>
+                    <small class="form-help">💡 Bilgisayarda <b>Ctrl</b> tuşuna basılı tutarak, mobilde ise doğrudan dokunarak birden fazla kişi seçebilirsiniz.</small>
                 </div>
 
                 <div class="form-group">
@@ -432,7 +462,7 @@
                     <thead>
                         <tr>
                             <th>Tarih</th>
-                            <th>Katılımcı</th>
+                            <th>Katılımcı(lar)</th>
                             <th style="width: 45%;">Yapılan İş</th>
                             <th>Mesai</th>
                             <th>Mesai Detayı</th>
@@ -447,7 +477,6 @@
     </div>
 
     <script>
-        // Bugünün tarihini varsayılan atama
         document.getElementById('isTarihi').valueAsDate = new Date();
         document.getElementById('filtreTarih').valueAsDate = new Date();
 
@@ -487,15 +516,19 @@
             event.preventDefault();
 
             const tarih = document.getElementById('isTarihi').value;
-            const katilimci = document.getElementById('katilimci').value;
             const isAciklama = document.getElementById('isAciklama').value;
             const mesaiKalindi = document.getElementById('mesaiKaldı').checked;
             const mesaiDetay = document.getElementById('mesaiSureAciklama').value;
 
+            // Çoklu seçilen personelleri diziye aktarıp virgülle birleştiriyoruz
+            const selectElement = document.getElementById('katilimci');
+            const secilenler = Array.from(selectElement.selectedOptions).map(option => option.value);
+            const katilimciMetni = secilenler.join(', ');
+
             const yeniKayit = {
                 id: Date.now(),
                 tarih: tarih,
-                katilimci: katilimci,
+                katilimci: katilimciMetni,
                 isAciklama: isAciklama,
                 mesaiKalindi: mesaiKalindi,
                 mesaiDetay: mesaiKalindi ? mesaiDetay : '-'
@@ -614,4 +647,21 @@
                 const temizMesaiDetay = kayit.mesaiDetay.replace(/;/g, ',').replace(/\n/g, ' ');
                 const mesaiMetin = kayit.mesaiKalindi ? "Evet" : "Hayir";
 
-                csvContent += `${kayit.tarih};${kay
+                csvContent += `${kayit.tarih};${kayit.katilimci};${temizIs};${mesaiMetin};${temizMesaiDetay}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Is_Takip_Raporu_${filtreTipi}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
