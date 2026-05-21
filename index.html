@@ -397,13 +397,13 @@
 
     <div class="sidebar">
         <div class="sidebar-title">İŞ TAKİP PANELİ</div>
-        <button class="menu-btn active" onclick="switchPage('kayit-sayfasi', this)">
+        <button class="menu-btn active" onclick="menuGecis('kayit-sayfasi', this)">
             📝 İş Kaydı
         </button>
-        <button class="menu-btn" onclick="switchPage('rapor-sayfasi', this); listeleRapor();">
+        <button class="menu-btn" onclick="menuGecis('rapor-sayfasi', this)">
             📊 Raporlama
         </button>
-        <button class="menu-btn" onclick="switchPage('yonetim-sayfasi', this); listeleYonetim();">
+        <button class="menu-btn" onclick="menuGecis('yonetim-sayfasi', this)">
             ❌ Kayıt Sil
         </button>
     </div>
@@ -502,4 +502,268 @@
             <div class="filter-panel">
                 <div class="filter-group">
                     <label for="yonetimAraInput">Kayıtlarda Ara</label>
-                    <input type="search" id="yonetimAraInput"
+                    <input type="search" id="yonetimAraInput" placeholder="Personel ismi veya iş açıklaması yazın..." oninput="listeleYonetim()">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Katılımcı(lar)</th>
+                            <th style="width: 50%;">Yapılan İş</th>
+                            <th style="text-align: center;">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yonetimDataBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Sayfa ilk açıldığında tarihleri eşitle
+        document.getElementById('isTarihi').valueAsDate = new Date();
+        document.getElementById('filtreTarih').valueAsDate = new Date();
+
+        function getDatabase() {
+            const db = localStorage.getItem('isTakipDB');
+            return db ? JSON.parse(db) : [];
+        }
+
+        function saveDatabase(data) {
+            localStorage.setItem('isTakipDB', JSON.stringify(data));
+        }
+
+        // Güvenli Sayfa Geçiş Fonksiyonu
+        function menuGecis(pageId, element) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+
+            if (pageId === 'rapor-sayfasi') {
+                listeleRapor();
+            } else if (pageId === 'yonetim-sayfasi') {
+                listeleYonetim();
+            }
+        }
+
+        function toggleMesaiAlani() {
+            const checkbox = document.getElementById('mesaiKaldı');
+            const detayPanel = document.getElementById('mesaiDetayPanel');
+            const detayInput = document.getElementById('mesaiSureAciklama');
+
+            if(checkbox.checked) {
+                detayPanel.style.display = 'block';
+                detayInput.setAttribute('required', 'required');
+            } else {
+                detayPanel.style.display = 'none';
+                detayInput.removeAttribute('required');
+                detayInput.value = '';
+            }
+        }
+
+        function kaydetVeri(event) {
+            event.preventDefault();
+
+            // SÖZCÜK HATASI BURADA DÜZELTİLDİ (const面 -> const)
+            const tarih = document.getElementById('isTarihi').value;
+            const isAciklama = document.getElementById('isAciklama').value;
+            const mesaiKalindi = document.getElementById('mesaiKaldı').checked;
+            const mesaiDetay = document.getElementById('mesaiSureAciklama').value;
+
+            const selectElement = document.getElementById('katilimci');
+            const secilenler = Array.from(selectElement.selectedOptions).map(option => option.value);
+            const katilimciMetni = secilenler.join(', ');
+
+            const yeniKayit = {
+                id: Date.now(),
+                tarih: tarih,
+                katilimci: katilimciMetni,
+                isAciklama: isAciklama,
+                mesaiKalindi: mesaiKalindi,
+                mesaiDetay: mesaiKalindi ? mesaiDetay : '-'
+            };
+
+            const db = getDatabase();
+            db.push(yeniKayit);
+            saveDatabase(db);
+
+            document.getElementById('isKayitFormu').reset();
+            document.getElementById('isTarihi').valueAsDate = new Date();
+            document.getElementById('mesaiDetayPanel').style.display = 'none';
+            document.getElementById('mesaiSureAciklama').removeAttribute('required');
+
+            showNotification("İşlem başarıyla kaydedildi!");
+        }
+
+        function showNotification(msg) {
+            const notif = document.getElementById('notification');
+            notif.innerText = msg;
+            notif.style.display = 'block';
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 3000);
+        }
+
+        function filtreGuncelle() {
+            const filtreTipi = document.getElementById('filtreTipi').value;
+            const filtreTarih = document.getElementById('filtreTarih');
+            const tarihFiltreGrup = document.getElementById('tarihFiltreGrup');
+            const tarihLabel = document.getElementById('tarihLabel');
+
+            if (filtreTipi === 'tum') {
+                tarihFiltreGrup.style.display = 'none';
+            } else {
+                tarihFiltreGrup.style.display = 'block';
+                if (filtreTipi === 'gunluk') {
+                    tarihLabel.innerText = "Tarih Seçimi";
+                    filtreTarih.type = "date";
+                    filtreTarih.valueAsDate = new Date();
+                } else if (filtreTipi === 'aylik') {
+                    tarihLabel.innerText = "Ay Seçimi";
+                    filtreTarih.type = "month";
+                    const bugun = new Date();
+                    const ay = String(bugun.getMonth() + 1).padStart(2, '0');
+                    filtreTarih.value = bugun.getFullYear() + "-" + ay;
+                }
+            }
+            listeleRapor();
+        }
+
+        function formatTarihTR(tarihDeger) {
+            if(!tarihDeger) return "";
+            const parca = tarihDeger.split('-');
+            return parca.length === 3 ? `${parca[2]}.${parca[1]}.${parca[0]}` : tarihDeger;
+        }
+
+        function listeleRapor() {
+            const db = getDatabase();
+            const filtreTipi = document.getElementById('filtreTipi').value;
+            const filtreTarihDeger = document.getElementById('filtreTarih').value;
+            const tbody = document.getElementById('raporDataBody');
+            
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            db.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+
+            const filtrelenmişVeri = db.filter(kayit => {
+                if (filtreTipi === 'tum') return true;
+                if (!filtreTarihDeger) return true;
+                if (filtreTipi === 'gunluk') return kayit.tarih === filtreTarihDeger;
+                if (filtreTipi === 'aylik') return kayit.tarih.startsWith(filtreTarihDeger);
+                return true;
+            });
+
+            if (filtrelenmişVeri.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 30px;">Kayıtlı veri bulunamadı.</td></tr>`;
+                return;
+            }
+
+            filtrelenmişVeri.forEach(kayit => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${formatTarihTR(kayit.tarih)}</b></td>
+                    <td>${kayit.katilimci}</td>
+                    <td>${kayit.isAciklama}</td>
+                    <td><span class="badge ${kayit.mesaiKalindi ? 'badge-yes' : 'badge-no'}">${kayit.mesaiKalindi ? 'Evet' : 'Hayır'}</span></td>
+                    <td>${kayit.mesaiDetay}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function listeleYonetim() {
+            const db = getDatabase();
+            const aramaInput = document.getElementById('yonetimAraInput');
+            const aramaKelimesi = aramaInput ? aramaInput.value.toLowerCase() : "";
+            const tbody = document.getElementById('yonetimDataBody');
+            
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            db.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+
+            const filtrelenmis = db.filter(kayit => {
+                return kayit.katilimci.toLowerCase().includes(aramaKelimesi) || 
+                       kayit.isAciklama.toLowerCase().includes(aramaKelimesi);
+            });
+
+            if (filtrelenmis.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding: 30px;">Kayıt bulunamadı.</td></tr>`;
+                return;
+            }
+
+            filtrelenmis.forEach(kayit => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${formatTarihTR(kayit.tarih)}</b></td>
+                    <td>${kayit.katilimci}</td>
+                    <td>${kayit.isAciklama}</td>
+                    <td style="text-align:center;">
+                        <button class="btn btn-danger" onclick="kayitSil(${kayit.id})">🗑️ Sil</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function kayitSil(id) {
+            if (confirm("Bu iş kaydını kalıcı olarak silmek istediğinize emin misiniz?")) {
+                let db = getDatabase();
+                db = db.filter(kayit => kayit.id !== id);
+                saveDatabase(db);
+                
+                listeleYonetim();
+                showNotification("Kayıt başarıyla silindi.");
+            }
+        }
+
+        function raporuDisaAktar() {
+            const db = getDatabase();
+            if(db.length === 0) {
+                alert("Dışa aktarılacak veri bulunamadı.");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "Tarih;Katilimci;Yapilan Is;Mesai Durumu;Mesai Detayi\n";
+
+            const filtreTipi = document.getElementById('filtreTipi').value;
+            const filtreTarihDeger = document.getElementById('filtreTarih').value;
+
+            const filtrelenmişVeri = db.filter(kayit => {
+                if (filtreTipi === 'tum') return true;
+                if (!filtreTarihDeger) return true;
+                if (filtreTipi === 'gunluk') return kayit.tarih === filtreTarihDeger;
+                if (filtreTipi === 'aylik') return kayit.tarih.startsWith(filtreTarihDeger);
+                return true;
+            });
+
+            filtrelenmişVeri.forEach(kayit => {
+                const temizIs = kayit.isAciklama.replace(/;/g, ',').replace(/\n/g, ' ');
+                const temizMesaiDetay = kayit.mesaiDetay.replace(/;/g, ',').replace(/\n/g, ' ');
+                const mesaiMetin = kayit.mesaiKalindi ? "Evet" : "Hayir";
+
+                csvContent += `${kayit.tarih};${kayit.katilimci};${temizIs};${mesaiMetin};${temizMesaiDetay}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Is_Takip_Raporu_${filtreTipi}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
