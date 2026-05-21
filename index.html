@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Günlük İş Kayıt ve Raporlama Sistemi</title>
     <style>
         * {
@@ -10,6 +10,8 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Mobil cihazlarda istenmeyen mavi seçim alanını kaldırır */
+            -webkit-tap-highlight-color: transparent; 
         }
 
         body {
@@ -19,6 +21,8 @@
             height: 100vh;
             overflow: hidden;
             flex-direction: row;
+            /* 1. ÇÖZÜM: Mobil aşağı çekip yenilemeyi (pull-to-refresh) tamamen engeller */
+            overscroll-behavior-y: contain; 
         }
 
         /* Sol Menü / Sidebar */
@@ -31,6 +35,7 @@
             padding: 20px 0;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             flex-shrink: 0;
+            z-index: 10;
         }
 
         .sidebar-title {
@@ -51,7 +56,7 @@
             text-align: left;
             font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             width: 100%;
             display: flex;
             align-items: center;
@@ -75,6 +80,7 @@
             padding: 40px;
             overflow-y: auto;
             height: 100vh;
+            -webkit-overflow-scrolling: touch; /* Mobilde pürüzsüz kaydırma */
         }
 
         /* Sayfa Düzeni */
@@ -132,14 +138,14 @@
         /* Çoklu seçim alanı ayarı */
         select[multiple] {
             height: auto;
-            min-height: 130px;
+            min-height: 140px;
             padding: 8px;
         }
 
         select[multiple] option {
-            padding: 10px 14px;
+            padding: 12px 14px;
             border-radius: 6px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-weight: 500;
         }
 
@@ -150,7 +156,7 @@
 
         textarea {
             resize: vertical;
-            min-height: 150px; 
+            min-height: 120px; 
         }
 
         input:focus, select:focus, textarea:focus {
@@ -163,34 +169,38 @@
             font-size: 13px;
             color: #64748b;
             margin-top: 6px;
+            line-height: 1.4;
         }
 
         /* Checkbox Alanı */
         .checkbox-group {
             display: inline-flex;
             align-items: center;
-            gap: 12px;
-            margin: 25px 0;
+            gap: 14px;
+            margin: 15px 0 25px 0;
             cursor: pointer;
             user-select: none;
-            padding: 10px 0;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            width: 100%;
         }
 
         .checkbox-group input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             cursor: pointer;
         }
 
         /* Dinamik Açılan Mesai Alanı */
         .mesai-container {
             display: none;
-            background-color: #f8fafc;
+            background-color: #fffbeb;
             padding: 20px;
             border-radius: 8px;
-            border-left: 5px solid #3b82f6;
-            margin-top: 15px;
-            animation: fadeIn 0.3s ease;
+            border-left: 5px solid #d97706;
+            margin-bottom: 25px;
+            animation: fadeIn 0.25s ease;
         }
 
         @keyframes fadeIn {
@@ -212,37 +222,26 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
+            justify-content: center;
         }
 
-        .btn:hover {
-            background-color: #2563eb;
-        }
-
-        .btn-success {
-            background-color: #10b981;
-        }
-
-        .btn-success:hover {
-            background-color: #059669;
-        }
-
+        .btn:hover { background-color: #2563eb; }
+        .btn-success { background-color: #10b981; }
+        .btn-success:hover { background-color: #059669; }
+        
         .btn-danger {
             background-color: #ef4444;
-            padding: 8px 14px;
+            padding: 10px 16px;
             font-size: 14px;
             border-radius: 6px;
             color: white;
             border: none;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.2s;
         }
+        .btn-danger:hover { background-color: #dc2626; }
 
-        .btn-danger:hover {
-            background-color: #dc2626;
-        }
-
-        /* Paneller (Filtre/Arama vb.) */
+        /* Paneller */
         .filter-panel {
             display: flex;
             gap: 20px;
@@ -265,6 +264,7 @@
             margin-top: 25px;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
+            background: #fff;
         }
 
         table {
@@ -286,19 +286,7 @@
             white-space: nowrap;
         }
 
-        tr:hover {
-            background-color: #f8fafc;
-        }
-
-        td:nth-child(2) {
-            min-width: 150px;
-        }
-
-        td:nth-child(3) {
-            min-width: 250px;
-            max-width: 600px;
-            word-break: break-word;
-        }
+        tr:hover { background-color: #f8fafc; }
 
         .badge {
             padding: 6px 12px;
@@ -306,7 +294,6 @@
             font-size: 13px;
             font-weight: 600;
         }
-
         .badge-yes { background-color: #d1fae5; color: #065f46; }
         .badge-no { background-color: #f1f5f9; color: #475569; }
 
@@ -323,15 +310,9 @@
             display: none;
             z-index: 1000;
             font-weight: 600;
-            animation: slideIn 0.3s ease;
         }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* Mobil ve Tablet Uyumluluk Ayarları */
+        /* Mobil ve Tablet Düzenlemeleri */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -341,39 +322,30 @@
                 width: 100%;
                 height: auto;
                 flex-direction: row;
-                padding: 10px;
-                align-items: center;
-                justify-content: space-around;
-                flex-wrap: wrap;
-                gap: 5px;
+                padding: 5px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             }
 
-            .sidebar-title {
-                display: none;
-            }
+            .sidebar-title { display: none; }
 
             .menu-btn {
-                padding: 10px;
+                padding: 12px 5px;
                 text-align: center;
                 justify-content: center;
-                font-size: 13px;
-                border-radius: 6px;
-                width: 31%;
+                font-size: 14px;
+                flex: 1;
+                flex-direction: column;
+                gap: 4px;
+                border-radius: 8px;
             }
 
             .main-content {
                 padding: 15px;
-                height: calc(100vh - 70px);
+                height: calc(100vh - 65px);
             }
 
-            .page {
-                padding: 20px;
-            }
-
-            h2 {
-                font-size: 20px;
-                margin-bottom: 20px;
-            }
+            .page { padding: 20px; }
+            h2 { font-size: 20px; margin-bottom: 15px; }
 
             .filter-panel {
                 flex-direction: column;
@@ -382,14 +354,10 @@
                 padding: 15px;
             }
 
-            .filter-group {
-                min-width: 100%;
-            }
-
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
+            .filter-group { min-width: 100%; }
+            .btn { width: 100%; }
+            
+            td, th { padding: 12px 10px; font-size: 14px; }
         }
     </style>
 </head>
@@ -397,20 +365,20 @@
 
     <div class="sidebar">
         <div class="sidebar-title">İŞ TAKİP PANELİ</div>
-        <button class="menu-btn active" onclick="menuGecis('kayit-sayfasi', this)">
+        <button class="menu-btn active" id="btn-kayit" onclick="menuGecis('kayit-sayfasi', this)">
             📝 İş Kaydı
         </button>
-        <button class="menu-btn" onclick="menuGecis('rapor-sayfasi', this)">
+        <button class="menu-btn" id="btn-rapor" onclick="menuGecis('rapor-sayfasi', this)">
             📊 Raporlama
         </button>
-        <button class="menu-btn" onclick="menuGecis('yonetim-sayfasi', this)">
+        <button class="menu-btn" id="btn-yonetim" onclick="menuGecis('yonetim-sayfasi', this)">
             ❌ Kayıt Sil
         </button>
     </div>
 
     <div class="main-content">
         
-        <div id="notification" class="notification">İşlem başarıyla kaydedildi!</div>
+        <div id="notification" class="notification">İşlem Başarılı!</div>
 
         <div id="kayit-sayfasi" class="page active">
             <h2>Günlük İş Kaydı Formu</h2>
@@ -430,7 +398,7 @@
                         <option value="MEHMET KUZU">MEHMET KUZU</option>
                         <option value="KAYHAN SEZGİN">KAYHAN SEZGİN</option>
                     </select>
-                    <small class="form-help">💡 Bilgisayarda <b>Ctrl</b> tuşuna basılı tutarak, mobilde ise doğrudan dokunarak birden fazla kişi seçebilirsiniz.</small>
+                    <small class="form-help">💡 Bilgisayarda <b>Ctrl</b> tuşuna basarak birden fazla kişi seçebilirsiniz. Mobilde doğrudan isimlere dokunmanız yeterlidir.</small>
                 </div>
 
                 <div class="form-group">
@@ -438,22 +406,20 @@
                     <textarea id="isAciklama" placeholder="Bugün gerçekleştirilen faaliyetleri detaylandırın..." required></textarea>
                 </div>
 
-                <div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="mesaiKaldı" onchange="toggleMesaiAlani()">
-                        <label for="mesaiKaldı" style="margin-bottom: 0; cursor: pointer;">Mesaiye Kalındı mı?</label>
-                    </div>
+                <div class="checkbox-group" id="mesaiTetikleyici">
+                    <input type="checkbox" id="mesaiKaldı">
+                    <label for="mesaiKaldı" style="margin-bottom: 0; cursor: pointer; flex: 1;">Mesaiye Kalındı mı?</label>
                 </div>
 
                 <div id="mesaiDetayPanel" class="mesai-container">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="mesaiSureAciklama">Mesai Süresi ve Açıklaması</label>
-                        <input type="text" id="mesaiSureAciklama" placeholder="Örn: 2 Saat - Raporlama ve sunum hazırlığı yapıldı">
+                        <input type="text" id="mesaiSureAciklama" placeholder="Örn: 2 Saat - Arıza onarımı tamamlandı">
                     </div>
                 </div>
 
-                <div style="margin-top: 35px;">
-                    <button type="submit" class="btn">💾 Kaydet</button>
+                <div style="margin-top: 25px;">
+                    <button type="submit" class="btn">💾 Kaydı Tamamla</button>
                 </div>
             </form>
         </div>
@@ -485,13 +451,12 @@
                         <tr>
                             <th>Tarih</th>
                             <th>Katılımcı(lar)</th>
-                            <th style="width: 45%;">Yapılan İş</th>
+                            <th style="width: 40%;">Yapılan İş</th>
                             <th>Mesai</th>
                             <th>Mesai Detayı</th>
                         </tr>
                     </thead>
-                    <tbody id="raporDataBody">
-                        </tbody>
+                    <tbody id="raporDataBody"></tbody>
                 </table>
             </div>
         </div>
@@ -516,8 +481,7 @@
                             <th style="text-align: center;">İşlem</th>
                         </tr>
                     </thead>
-                    <tbody id="yonetimDataBody">
-                        </tbody>
+                    <tbody id="yonetimDataBody"></tbody>
                 </table>
             </div>
         </div>
@@ -525,9 +489,23 @@
     </div>
 
     <script>
-        // Sayfa ilk açıldığında tarihleri eşitle
-        document.getElementById('isTarihi').valueAsDate = new Date();
-        document.getElementById('filtreTarih').valueAsDate = new Date();
+        // Sayfa hazır olduğunda çalışacak kodlar
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById('isTarihi').valueAsDate = new Date();
+            document.getElementById('filtreTarih').valueAsDate = new Date();
+            
+            // 2. ÇÖZÜM: Mobilde kilitlenen Checkbox alanı için hibrit tıklama dinleyicisi
+            const mesaiBlok = document.getElementById('mesaiTetikleyici');
+            if(mesaiBlok) {
+                mesaiBlok.addEventListener('click', function(e) {
+                    const checkbox = document.getElementById('mesaiKaldı');
+                    if (e.target !== checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                    toggleMesaiAlani();
+                });
+            }
+        });
 
         function getDatabase() {
             const db = localStorage.getItem('isTakipDB');
@@ -538,14 +516,20 @@
             localStorage.setItem('isTakipDB', JSON.stringify(data));
         }
 
-        // Güvenli Sayfa Geçiş Fonksiyonu
+        // 3 ve 4. ÇÖZÜM: Menü sayfalarının güvenli, gecikmesiz açılmasını sağlayan fonksiyon
         function menuGecis(pageId, element) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
             
-            document.getElementById(pageId).classList.add('active');
-            element.classList.add('active');
+            const targetPage = document.getElementById(pageId);
+            if(targetPage) {
+                targetPage.style.display = 'block';
+            }
+            if(element) {
+                element.classList.add('active');
+            }
 
+            // Sayfa açıldıktan hemen sonra verileri güvenli şekilde bind et
             if (pageId === 'rapor-sayfasi') {
                 listeleRapor();
             } else if (pageId === 'yonetim-sayfasi') {
@@ -558,9 +542,10 @@
             const detayPanel = document.getElementById('mesaiDetayPanel');
             const detayInput = document.getElementById('mesaiSureAciklama');
 
-            if(checkbox.checked) {
+            if(checkbox && checkbox.checked) {
                 detayPanel.style.display = 'block';
                 detayInput.setAttribute('required', 'required');
+                detayInput.focus();
             } else {
                 detayPanel.style.display = 'none';
                 detayInput.removeAttribute('required');
@@ -571,7 +556,6 @@
         function kaydetVeri(event) {
             event.preventDefault();
 
-            // SÖZCÜK HATASI BURADA DÜZELTİLDİ (const面 -> const)
             const tarih = document.getElementById('isTarihi').value;
             const isAciklama = document.getElementById('isAciklama').value;
             const mesaiKalindi = document.getElementById('mesaiKaldı').checked;
@@ -579,6 +563,12 @@
 
             const selectElement = document.getElementById('katilimci');
             const secilenler = Array.from(selectElement.selectedOptions).map(option => option.value);
+            
+            if(secilenler.length === 0) {
+                alert("Lütfen en az bir katılımcı seçin!");
+                return;
+            }
+            
             const katilimciMetni = secilenler.join(', ');
 
             const yeniKayit = {
@@ -594,6 +584,7 @@
             db.push(yeniKayit);
             saveDatabase(db);
 
+            // Formu sıfırla
             document.getElementById('isKayitFormu').reset();
             document.getElementById('isTarihi').valueAsDate = new Date();
             document.getElementById('mesaiDetayPanel').style.display = 'none';
@@ -608,7 +599,7 @@
             notif.style.display = 'block';
             setTimeout(() => {
                 notif.style.display = 'none';
-            }, 3000);
+            }, 2500);
         }
 
         function filtreGuncelle() {
@@ -650,9 +641,10 @@
             
             if(!tbody) return;
             tbody.innerHTML = '';
+            
             db.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
 
-            const filtrelenmişVeri = db.filter(kayit => {
+            const filtrelenmisVeri = db.filter(kayit => {
                 if (filtreTipi === 'tum') return true;
                 if (!filtreTarihDeger) return true;
                 if (filtreTipi === 'gunluk') return kayit.tarih === filtreTarihDeger;
@@ -660,12 +652,12 @@
                 return true;
             });
 
-            if (filtrelenmişVeri.length === 0) {
+            if (filtrelenmisVeri.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 30px;">Kayıtlı veri bulunamadı.</td></tr>`;
                 return;
             }
 
-            filtrelenmişVeri.forEach(kayit => {
+            filtrelenmisVeri.forEach(kayit => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>${formatTarihTR(kayit.tarih)}</b></td>
@@ -686,6 +678,7 @@
             
             if(!tbody) return;
             tbody.innerHTML = '';
+            
             db.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
 
             const filtrelenmis = db.filter(kayit => {
@@ -736,7 +729,7 @@
             const filtreTipi = document.getElementById('filtreTipi').value;
             const filtreTarihDeger = document.getElementById('filtreTarih').value;
 
-            const filtrelenmişVeri = db.filter(kayit => {
+            const filtrelenmisVeri = db.filter(kayit => {
                 if (filtreTipi === 'tum') return true;
                 if (!filtreTarihDeger) return true;
                 if (filtreTipi === 'gunluk') return kayit.tarih === filtreTarihDeger;
@@ -744,7 +737,7 @@
                 return true;
             });
 
-            filtrelenmişVeri.forEach(kayit => {
+            filtrelenmisVeri.forEach(kayit => {
                 const temizIs = kayit.isAciklama.replace(/;/g, ',').replace(/\n/g, ' ');
                 const temizMesaiDetay = kayit.mesaiDetay.replace(/;/g, ',').replace(/\n/g, ' ');
                 const mesaiMetin = kayit.mesaiKalindi ? "Evet" : "Hayir";
