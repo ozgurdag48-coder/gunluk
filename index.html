@@ -614,21 +614,4 @@
                 const temizMesaiDetay = kayit.mesaiDetay.replace(/;/g, ',').replace(/\n/g, ' ');
                 const mesaiMetin = kayit.mesaiKalindi ? "Evet" : "Hayir";
 
-                csvContent += `${kayit.tarih};${kayit.katilimci};${temizIs};${mesaiMetin};${temizMesaiDetay}\n`;
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Is_Takip_Raporu_${filtreTipi}.csv`);
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    </script>
-</body>
-</html>
+                csvContent += `${kayit.tarih};${kay
