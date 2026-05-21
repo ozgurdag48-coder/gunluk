@@ -18,10 +18,10 @@
             color: #333;
             height: 100vh;
             overflow: hidden;
-            flex-direction: row; /* Varsayılan yan yana (Masaüstü) */
+            flex-direction: row;
         }
 
-        /* Sol Menü / Sidebar (Masaüstü için varsayılan) */
+        /* Sol Menü / Sidebar */
         .sidebar {
             width: 260px;
             background-color: #1e293b;
@@ -284,25 +284,23 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* ========================================== */
-        /* MOBİL VE TABLET UYUMLULUK AYARLARI (MEDIA QUERY) */
-        /* ========================================== */
+        /* Mobil ve Tablet Uyumluluk Ayarları */
         @media (max-width: 768px) {
             body {
-                flex-direction: column; /* Menü üstte, içerik altta olacak */
+                flex-direction: column;
             }
 
             .sidebar {
-                width: 100%; /* Sol menü tam genişlik kaplayacak */
+                width: 100%;
                 height: auto;
-                flex-direction: row; /* Butonlar yan yana sıralanacak */
+                flex-direction: row;
                 padding: 10px;
                 align-items: center;
                 justify-content: space-between;
             }
 
             .sidebar-title {
-                display: none; /* Başlığı mobilde gizleyerek yer açıyoruz */
+                display: none;
             }
 
             .menu-btn {
@@ -311,16 +309,16 @@
                 justify-content: center;
                 font-size: 14px;
                 border-radius: 6px;
-                width: 48%; /* İki buton yan yana eşit sığacak */
+                width: 48%;
             }
 
             .main-content {
-                padding: 15px; /* Mobilde kenar boşluklarını küçültüyoruz */
-                height: calc(100vh - 60px); /* Kalan alanı içeriğe veriyoruz */
+                padding: 15px;
+                height: calc(100vh - 60px);
             }
 
             .page {
-                padding: 20px; /* İçerik kutusunun iç boşluğunu azaltıyoruz */
+                padding: 20px;
             }
 
             h2 {
@@ -340,7 +338,7 @@
             }
 
             .btn {
-                width: 100%; /* Mobilde butonlar tam genişlik basılsın */
+                width: 100%;
                 justify-content: center;
             }
         }
@@ -375,11 +373,11 @@
                     <label for="katilimci">Katılımcı Seçimi</label>
                     <select id="katilimci" required>
                         <option value="">-- Personel Seçiniz --</option>
-                        <option value="Ahmet Yılmaz">Ahmet Yılmaz</option>
-                        <option value="Mehmet Demir">Mehmet Demir</option>
-                        <option value="Ayşe Kaya">Ayşe Kaya</option>
-                        <option value="Fatma Çelik">Fatma Çelik</option>
-                        <option value="Ali Öztürk">Ali Öztürk</option>
+                        <option value="ÖZGÜR DAĞ">ÖZGÜR DAĞ</option>
+                        <option value="ÖZGÜR TÜRKKAL">ÖZGÜR TÜRKKAL</option>
+                        <option value="MUSTAFA ADIŞANLI">MUSTAFA ADIŞANLI</option>
+                        <option value="MEHMET KUZU">MEHMET KUZU</option>
+                        <option value="KAYHAN SEZGİN">KAYHAN SEZGİN</option>
                     </select>
                 </div>
 
@@ -449,6 +447,7 @@
     </div>
 
     <script>
+        // Bugünün tarihini varsayılan atama
         document.getElementById('isTarihi').valueAsDate = new Date();
         document.getElementById('filtreTarih').valueAsDate = new Date();
 
@@ -558,7 +557,7 @@
 
             const filtrelenmişVeri = db.filter(kayit => {
                 if (filtreTipi === 'tum') return true;
-                if (!val = filtreTarihDeger) return true;
+                if (!filtreTarihDeger) return true;
                 
                 if (filtreTipi === 'gunluk') {
                     return kayit.tarih === filtreTarihDeger;
