@@ -10,7 +10,6 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Mobil cihazlarda istenmeyen mavi seçim alanını kaldırır */
             -webkit-tap-highlight-color: transparent; 
         }
 
@@ -21,7 +20,6 @@
             height: 100vh;
             overflow: hidden;
             flex-direction: row;
-            /* 1. ÇÖZÜM: Mobil aşağı çekip yenilemeyi (pull-to-refresh) tamamen engeller */
             overscroll-behavior-y: contain; 
         }
 
@@ -80,7 +78,7 @@
             padding: 40px;
             overflow-y: auto;
             height: 100vh;
-            -webkit-overflow-scrolling: touch; /* Mobilde pürüzsüz kaydırma */
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Sayfa Düzeni */
@@ -135,7 +133,6 @@
             background-color: #fff;
         }
 
-        /* Çoklu seçim alanı ayarı */
         select[multiple] {
             height: auto;
             min-height: 140px;
@@ -228,7 +225,7 @@
         .btn:hover { background-color: #2563eb; }
         .btn-success { background-color: #10b981; }
         .btn-success:hover { background-color: #059669; }
-        
+         
         .btn-danger {
             background-color: #ef4444;
             padding: 10px 16px;
@@ -356,7 +353,7 @@
 
             .filter-group { min-width: 100%; }
             .btn { width: 100%; }
-            
+             
             td, th { padding: 12px 10px; font-size: 14px; }
         }
     </style>
@@ -377,13 +374,13 @@
     </div>
 
     <div class="main-content">
-        
+         
         <div id="notification" class="notification">İşlem Başarılı!</div>
 
         <div id="kayit-sayfasi" class="page active">
             <h2>Günlük İş Kaydı Formu</h2>
             <form id="isKayitFormu" onsubmit="kaydetVeri(event)">
-                
+                 
                 <div class="form-group">
                     <label for="isTarihi">Tarih</label>
                     <input type="date" id="isTarihi" required>
@@ -419,14 +416,14 @@
                 </div>
 
                 <div style="margin-top: 25px;">
-                    <button type="submit" class="btn">💾 Kaydı Tamamla</button>
+                    <button type="submit" class="btn" id="kayitButon">💾 Kaydı Tamamla</button>
                 </div>
             </form>
         </div>
 
         <div id="rapor-sayfasi" class="page">
             <h2>Raporlama ve Analiz</h2>
-            
+             
             <div class="filter-panel">
                 <div class="filter-group">
                     <label for="filtreTipi">Rapor Periyodu</label>
@@ -463,7 +460,7 @@
 
         <div id="yonetim-sayfasi" class="page">
             <h2>Kayıt Yönetimi (Silme Paneli)</h2>
-            
+             
             <div class="filter-panel">
                 <div class="filter-group">
                     <label for="yonetimAraInput">Kayıtlarda Ara</label>
@@ -489,12 +486,13 @@
     </div>
 
     <script>
-        // Sayfa hazır olduğunda çalışacak kodlar
+        // 🚀 ADIM 1'DE KOPYALADIĞINIZ URL ADRESİNİ BURAYA YAPIŞTIRIN:
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVOKCucWsk56fpCMLJk2vBdwV2x1icWoBCJyXUU_4aMZxbjGCKQUZh1Yw8APftwayjlA/exec";
+
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('isTarihi').valueAsDate = new Date();
             document.getElementById('filtreTarih').valueAsDate = new Date();
-            
-            // 2. ÇÖZÜM: Mobilde kilitlenen Checkbox alanı için hibrit tıklama dinleyicisi
+             
             const mesaiBlok = document.getElementById('mesaiTetikleyici');
             if(mesaiBlok) {
                 mesaiBlok.addEventListener('click', function(e) {
@@ -516,11 +514,10 @@
             localStorage.setItem('isTakipDB', JSON.stringify(data));
         }
 
-        // 3 ve 4. ÇÖZÜM: Menü sayfalarının güvenli, gecikmesiz açılmasını sağlayan fonksiyon
         function menuGecis(pageId, element) {
             document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-            
+             
             const targetPage = document.getElementById(pageId);
             if(targetPage) {
                 targetPage.style.display = 'block';
@@ -529,7 +526,6 @@
                 element.classList.add('active');
             }
 
-            // Sayfa açıldıktan hemen sonra verileri güvenli şekilde bind et
             if (pageId === 'rapor-sayfasi') {
                 listeleRapor();
             } else if (pageId === 'yonetim-sayfasi') {
@@ -563,12 +559,12 @@
 
             const selectElement = document.getElementById('katilimci');
             const secilenler = Array.from(selectElement.selectedOptions).map(option => option.value);
-            
+             
             if(secilenler.length === 0) {
                 alert("Lütfen en az bir katılımcı seçin!");
                 return;
             }
-            
+             
             const katilimciMetni = secilenler.join(', ');
 
             const yeniKayit = {
@@ -580,17 +576,49 @@
                 mesaiDetay: mesaiKalindi ? mesaiDetay : '-'
             };
 
+            // Butonu kilitle ve durumu kullanıcıya göster
+            const btn = document.getElementById('kayitButon');
+            const eskiButonIcerik = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = "⏳ Google Drive'a Senkronize Ediliyor...";
+
+            // 1. Mevcut sisteme (Yerele) Kayıt
             const db = getDatabase();
             db.push(yeniKayit);
             saveDatabase(db);
+
+            // 2. Google Drive'a (Sheets) Eşzamanlı Gönderim
+            if(GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL !== "SİZİN_GOOGLE_APPS_SCRIPT_URL_ADRESİNİZ") {
+                fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // CORS politikalarını aşmak için güvenli mod
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(yeniKayit)
+                })
+                .then(() => {
+                    showNotification("İşlem başarıyla kaydedildi ve Google Drive'a senkronize edildi!");
+                })
+                .catch(err => {
+                    console.error("Drive Senkronizasyon Hatası:", err);
+                    showNotification("Veri cihaza kaydedildi ancak Drive'a ulaştırılamadı (İnternet yok?).");
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = eskiButonIcerik;
+                });
+            } else {
+                // Eğer URL girilmemişse normal çalışmaya devam etsin
+                showNotification("İşlem yerel hafızaya kaydedildi (Google Drive URL eksik).");
+                btn.disabled = false;
+                btn.innerHTML = eskiButonIcerik;
+            }
 
             // Formu sıfırla
             document.getElementById('isKayitFormu').reset();
             document.getElementById('isTarihi').valueAsDate = new Date();
             document.getElementById('mesaiDetayPanel').style.display = 'none';
             document.getElementById('mesaiSureAciklama').removeAttribute('required');
-
-            showNotification("İşlem başarıyla kaydedildi!");
         }
 
         function showNotification(msg) {
@@ -599,7 +627,7 @@
             notif.style.display = 'block';
             setTimeout(() => {
                 notif.style.display = 'none';
-            }, 2500);
+            }, 3500); // Drive geri bildirimi için süreyi hafifçe uzattık
         }
 
         function filtreGuncelle() {
@@ -638,10 +666,10 @@
             const filtreTipi = document.getElementById('filtreTipi').value;
             const filtreTarihDeger = document.getElementById('filtreTarih').value;
             const tbody = document.getElementById('raporDataBody');
-            
+             
             if(!tbody) return;
             tbody.innerHTML = '';
-            
+             
             db.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
 
             const filtrelenmisVeri = db.filter(kayit => {
@@ -675,10 +703,10 @@
             const aramaInput = document.getElementById('yonetimAraInput');
             const aramaKelimesi = aramaInput ? aramaInput.value.toLowerCase() : "";
             const tbody = document.getElementById('yonetimDataBody');
-            
+             
             if(!tbody) return;
             tbody.innerHTML = '';
-            
+             
             db.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
 
             const filtrelenmis = db.filter(kayit => {
@@ -706,13 +734,13 @@
         }
 
         function kayitSil(id) {
-            if (confirm("Bu iş kaydını kalıcı olarak silmek istediğinize emin misiniz?")) {
+            if (confirm("Bu iş kaydını kalıcı olarak silmek istediğinize emin misiniz?\n(Not: Güvenlik nedeniyle bu işlem Google Sheet satırını silmez, sadece yerel raporu temizler.)")) {
                 let db = getDatabase();
                 db = db.filter(kayit => kayit.id !== id);
                 saveDatabase(db);
-                
+                 
                 listeleYonetim();
-                showNotification("Kayıt başarıyla silindi.");
+                showNotification("Kayıt yerel hafızadan başarıyla silindi.");
             }
         }
 
@@ -748,11 +776,11 @@
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
-            
+             
             link.setAttribute("href", url);
             link.setAttribute("download", `Is_Takip_Raporu_${filtreTipi}.csv`);
             link.style.visibility = 'hidden';
-            
+             
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
