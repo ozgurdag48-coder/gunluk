@@ -22,7 +22,7 @@
         .btn-success { background-color: #38a169; color: white; }
         .btn-success:hover { background-color: #2f855a; }
         
-        /* Klasik Kararlı Tablo Tasarımı */
+        /* Orijinal Klasik Tablo Tasarımı */
         .table-container { overflow-x: auto; margin-top: 25px; border: 1px solid #e2e8f0; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; text-align: left; background-color: #fff; }
         th { background-color: #2d3748; color: white; padding: 14px; font-size: 14px; font-weight: 600; }
@@ -30,7 +30,7 @@
         tr:last-child td { border-bottom: none; }
         tr:nth-child(even) { background-color: #f7fafc; }
         
-        /* Bildirim Kutuları */
+        /* Durum Bildirimleri */
         .alert { padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: 500; display: none; animation: fadeIn 0.3s; }
         .alert-success { background-color: #c6f6d5; color: #22543d; border-left: 5px solid #38a169; }
         .alert-error { background-color: #fed7d7; color: #742a2a; border-left: 5px solid #e53e3e; }
@@ -43,7 +43,7 @@
 <div class="container">
     <h2>Yeni Görev / Rapor Giriş Paneli</h2>
     
-    <!-- Durum Bildirim Alanı -->
+    <!-- Bildirim Ekranı -->
     <div id="bildirimKutusu" class="alert"></div>
     
     <form id="raporFormu" onsubmit="veriKaydet(event)">
@@ -115,7 +115,7 @@
 </div>
 
 <script>
-    // İlettiğiniz güncel Google Apps Script Web App URL adresi doğrudan entegre edildi:
+    // İlettiğiniz güncel Google Apps Script Web App URL adresi
     const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-s_JHoi-CiBWySLi4DFVy12o2LnKO-Q3uESQdAibvEvomjgySxFBW1Lp7M-UEvng6/exec";
 
     // Giriş alanlarını dinamik kilitler/açar
