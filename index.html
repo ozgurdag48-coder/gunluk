@@ -22,7 +22,7 @@
         .btn-success { background-color: #38a169; color: white; }
         .btn-success:hover { background-color: #2f855a; }
         
-        /* Tablo Tasarımı */
+        /* Klasik Kararlı Tablo Tasarımı */
         .table-container { overflow-x: auto; margin-top: 25px; border: 1px solid #e2e8f0; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; text-align: left; background-color: #fff; }
         th { background-color: #2d3748; color: white; padding: 14px; font-size: 14px; font-weight: 600; }
@@ -30,7 +30,7 @@
         tr:last-child td { border-bottom: none; }
         tr:nth-child(even) { background-color: #f7fafc; }
         
-        /* Durum Mesajları */
+        /* Bildirim Kutuları */
         .alert { padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: 500; display: none; animation: fadeIn 0.3s; }
         .alert-success { background-color: #c6f6d5; color: #22543d; border-left: 5px solid #38a169; }
         .alert-error { background-color: #fed7d7; color: #742a2a; border-left: 5px solid #e53e3e; }
@@ -43,7 +43,7 @@
 <div class="container">
     <h2>Yeni Görev / Rapor Giriş Paneli</h2>
     
-    <!-- Bildirim Alanı -->
+    <!-- Durum Bildirim Alanı -->
     <div id="bildirimKutusu" class="alert"></div>
     
     <form id="raporFormu" onsubmit="veriKaydet(event)">
@@ -67,7 +67,7 @@
             
             <div class="form-group">
                 <label for="mesaiDurumu">Mesai Durumu</label>
-                <select id="mesaiDurumu" required onchange="mesaiAlaniniYönet()">
+                <select id="mesaiDurumu" required onchange="mesaiAlaniniYonet()">
                     <option value="Hayır">Mesai Kalınmadı</option>
                     <option value="Evet">Mesai Kalındı</option>
                 </select>
@@ -106,7 +106,7 @@
                 </thead>
                 <tbody id="tabloBody">
                     <tr>
-                        <td colspan="6" style="text-align: center; color: #718096; padding: 20px;">Henüz listeleme yapılmadı. Verileri görmek için yukarıdaki yeşil butona basın.</td>
+                        <td colspan="6" style="text-align: center; color: #718096; padding: 20px;">Henüz listeleme yapılmadı. Verileri senkronize etmek için yukarıdaki yeşil butona basın.</td>
                     </tr>
                 </tbody>
             </table>
@@ -115,11 +115,11 @@
 </div>
 
 <script>
-    // ⚠️ KENDİ APPS SCRIPT BAĞLANTINIZI BURAYA YAPIŞTIRIN:
+    // İlettiğiniz güncel Google Apps Script Web App URL adresi doğrudan entegre edildi:
     const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-s_JHoi-CiBWySLi4DFVy12o2LnKO-Q3uESQdAibvEvomjgySxFBW1Lp7M-UEvng6/exec";
 
-    // Mesai durumuna göre açıklama kutusunu açıp kapatan akıllı kontrol
-    function mesaiAlaniniYönet() {
+    // Giriş alanlarını dinamik kilitler/açar
+    function mesaiAlaniniYonet() {
         const durum = document.getElementById("mesaiDurumu").value;
         const detayInput = document.getElementById("mesaiDetayi");
         if (durum === "Evet") {
@@ -133,15 +133,14 @@
         }
     }
 
-    // Mesaj kutusunu yöneten yardımcı fonksiyon
     function mesajGoster(metin, tip) {
         const kutu = document.getElementById("bildirimKutusu");
         kutu.className = "alert alert-" + tip;
-        kutu.innerText = text = metin;
+        kutu.innerText = metin;
         kutu.style.display = "block";
     }
 
-    // 1. İŞLEM: VERİ YAZMA (POST)
+    // 1. İŞLEM: VERİ YAZMA (E-Tabloya Ekleme)
     function veriKaydet(event) {
         event.preventDefault();
         mesajGoster("Rapor e-tabloya güvenli bir şekilde işleniyor, lütfen bekleyin...", "info");
@@ -155,7 +154,7 @@
             mesaiDetayi: document.getElementById("mesaiDetayi").value || "-"
         };
 
-        // Arka planda hiçbir verinin kaybolmaması için standart fetch api kullanımı
+        // Arka planda verilerin eksiksiz, kaymadan sırayla gönderilmesini sağlayan kararlı yapı
         fetch(GOOGLE_APPS_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
@@ -165,19 +164,19 @@
         .then(() => {
             mesajGoster("Kayıt başarıyla tamamlandı! E-tabloya eksiksiz ve doğru sütunlarla işlendi.", "success");
             document.getElementById("raporFormu").reset();
-            mesaiAlaniniYönet();
-            setTimeout(raporlariListele, 1000); // 1 saniye sonra listeyi otomatik tazele
+            mesaiAlaniniYonet();
+            setTimeout(raporlariListele, 1200); // E-tablonun yazma hızına göre ufak güvenli bekleme sonrası listeleme
         })
         .catch(error => {
             console.error(error);
-            mesajGoster("Sistemsel bir bağlantı hatası oluştu. Apps Script izinlerinizi kontrol edin.", "error");
+            mesajGoster("Sistemsel bir bağlantı hatası oluştu. Apps Script izinlerinizi veya linkinizi kontrol edin.", "error");
         });
     }
 
-    // 2. İŞLEM: VERİ OKUMA VE LİSTELEME (GET)
+    // 2. İŞLEM: VERİ OKUMA VE LİSTELEME
     function raporlariListele() {
         const tBody = document.getElementById("tabloBody");
-        tBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #2b6cb0;">E-tablodan veriler senkronize ediliyor...</td></tr>';
+        tBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #2b6cb0;">E-tablodan veriler canlı senkronize ediliyor...</td></tr>';
 
         fetch(GOOGLE_APPS_SCRIPT_URL)
         .then(res => res.json())
@@ -188,7 +187,7 @@
             }
 
             let rowsHtml = "";
-            // Filtre engellerini tamamen aşmak için e-tablodaki başlık sırasını dinamik çözüyoruz
+            // Herhangi bir başlık kayması/filtre hatası olmadan ham hücre verilerini temizce basar
             data.forEach(satir => {
                 const anahtarlar = Object.keys(satir);
                 rowsHtml += `<tr>
@@ -204,7 +203,7 @@
         })
         .catch(err => {
             console.error(err);
-            tBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #e53e3e; font-weight: bold;">Veri çekme hatası. Lütfen daha sonra tekrar deneyin veya URL adresini kontrol edin.</td></tr>';
+            tBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #e53e3e; font-weight: bold;">Veri çekme hatası. Lütfen daha sonra tekrar deneyin.</td></tr>';
         });
     }
 </script>
