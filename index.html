@@ -49,7 +49,7 @@
         </div>
         <div class="form-group">
             <label for="yapilanIs">Yapılan İş / Görev Detayı:</label>
-            <textarea id="yapilanIs" placeholder="Bugün neler yapıldığını kısaca yazın..." required></textarea>
+            <textarea id="yapilanIs" placeholder="Bugün neler yapıldığını detaylıca yazın..." required></textarea>
         </div>
         <div class="form-group">
             <label for="mesaiDurumu">Mesai Kalındı mı?</label>
@@ -84,7 +84,7 @@
             </thead>
             <tbody id="tabloGovdesi">
                 <tr>
-                    <td colspan="6" style="text-align:center; color:#7f8c8d;">Henüz veri çekilmedi. Listelemek için yukarıdaki butona basın.</td>
+                    <td colspan="6" style="text-align:center; color:#7f8c8d;">Henüz veri çekilmedi. Listelemek için yukarıdaki yeşil butonuna basın.</td>
                 </tr>
             </tbody>
         </table>
@@ -92,65 +92,65 @@
 </div>
 
 <script>
-    // ⚠️ KENDİ APPS SCRIPT URL BAĞLANTINIZI BURAYA YAPIŞTIRIN:
+    // ⚠️ KENDİ WEB UYGULAMASI URL ADRESİNİZİ AŞAĞIDAKİ ALANA YAPIŞTIRIN (Sonu /exec ile bitmeli):
     const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-s_JHoi-CiBWySLi4DFVy12o2LnKO-Q3uESQdAibvEvomjgySxFBW1Lp7M-UEvng6/exec";
 
-    // 1. FONKSİYON: GOOGLE E-TABLOYA VERİ YAZMA (POST)
+    // 1. FONKSİYON: GOOGLE E-TABLOYA VERİ YAZMA (URL-Encoded Formatı ile Eksiksiz Aktarım)
     function kayitEkle(event) {
         event.preventDefault();
         const mesajKutusu = document.getElementById("mesajKutusu");
         mesajKutusu.className = "status-msg";
-        mesajKutusu.innerText = "Kayıt gönderiliyor...";
+        mesajKutusu.innerText = "Kayıt e-tabloya işleniyor...";
         mesajKutusu.style.display = "block";
 
-        const veriPaketi = {
-            id: "ID-" + Math.floor(Math.random() * 100000), // Benzersiz rastgele ID
-            tarih: document.getElementById("tarih").value,
-            katilimci: document.getElementById("katilimci").value,
-            yapilanIs: document.getElementById("yapilanIs").value,
-            mesaiDurumu: document.getElementById("mesaiDurumu").value,
-            mesaiDetayi: document.getElementById("mesaiDetayi").value || "-"
-        };
+        // Google'ın no-cors modunda veriyi bölmeden, eksiksiz okumasını sağlayan güvenli URL parametre yapısı:
+        const formVerileri = new URLSearchParams();
+        formVerileri.append("id", "ID-" + Math.floor(Math.random() * 100000));
+        formVerileri.append("tarih", document.getElementById("tarih").value);
+        formVerileri.append("katilimci", document.getElementById("katilimci").value);
+        formVerileri.append("yapilanIs", document.getElementById("yapilanIs").value);
+        formVerileri.append("mesaiDurumu", document.getElementById("mesaiDurumu").value);
+        formVerileri.append("mesaiDetayi", document.getElementById("mesaiDetayi").value || "-");
 
         fetch(GOOGLE_APPS_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors", // Tarayıcı güvenlik politikaları uyuşmazlığını aşmak için önlemdir
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(veriPaketi)
+            mode: "no-cors", 
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formVerileri.toString()
         })
         .then(() => {
             mesajKutusu.className = "status-msg success";
-            mesajKutusu.innerText = "Başarıyla Kaydedildi! E-tablonuzu kontrol edebilirsiniz.";
+            mesajKutusu.innerText = "Başarıyla Kaydedildi! Tüm veriler e-tabloya eksiksiz aktarıldı.";
             document.getElementById("kayitFormu").reset();
-            // Kayıttan hemen sonra tabloyu otomatik güncellemesi için:
+            
+            // Kullanıcı konforu için 1.5 saniye sonra rapor tablosunu otomatik olarak yeniler
             setTimeout(raporlariGetir, 1500);
         })
         .catch(error => {
             console.error("Hata:", error);
             mesajKutusu.className = "status-msg error";
-            mesajKutusu.innerText = "Veri gönderilirken bir hata oluştu!";
+            mesajKutusu.innerText = "Veri gönderilirken bir bağlantı hatası oluştu!";
         });
     }
 
-    // 2. FONKSİYON: GOOGLE E-TABLODAN DOĞRUDAN VERİ ÇEKME (GET)
+    // 2. FONKSİYON: GOOGLE E-TABLODAN DOĞRUDAN VERİ ÇEKME (Filtresiz Net Listeleme)
     function raporlariGetir() {
         const tabloGovdesi = document.getElementById("tabloGovdesi");
-        tabloGovdesi.innerHTML = '<tr><td colspan="6" style="text-align:center;">Veriler yükleniyor, lütfen bekleyin...</td></tr>';
+        tabloGovdesi.innerHTML = '<tr><td colspan="6" style="text-align:center;">E-tablo taranıyor, veriler yükleniyor...</td></tr>';
 
         fetch(GOOGLE_APPS_SCRIPT_URL)
         .then(response => response.json())
         .then(data => {
-            console.log("E-Tablodan Gelen Ham Veri:", data);
+            console.log("E-Tablodan Çekilen Veriler:", data);
             
             if (!data || data.length === 0 || data.error) {
-                tabloGovdesi.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#c0392b; font-weight:bold;">E-tabloda okunabilir hiçbir kayıt bulunamadı!</td></tr>';
+                tabloGovdesi.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#c0392b; font-weight:bold;">E-tabloda okunabilir hiçbir kayıt bulunamadı! Başlık satırını kontrol edin.</td></tr>';
                 return;
             }
 
             let htmlContent = "";
-            // Filtreleri tamamen devralıp, e-tablodaki tüm satırları sırayla döngüye alıyoruz
+            // E-tablodaki başlık isimlerine bağımlı kalmamak için nesne anahtarlarını (keys) dinamik çözüyoruz
             data.forEach(satir => {
-                // Sütun isimleri ne olursa olsun hata vermemesi için dinamik anahtarları (Keys) yakalıyoruz
                 const keys = Object.keys(satir);
                 
                 htmlContent += `<tr>
@@ -167,7 +167,7 @@
         })
         .catch(error => {
             console.error("Hata:", error);
-            tabloGovdesi.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#c0392b; font-weight:bold;">Bağlantı hatası: Veriler çekilemedi. Apps Script URL izinlerini kontrol edin.</td></tr>';
+            tabloGovdesi.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#c0392b; font-weight:bold;">Bağlantı hatası: Veriler alınamadı. Apps Script web uygulamasının erişim iznini "Herkes" (Anyone) olarak güncellediğinizden emin olun.</td></tr>';
         });
     }
 </script>
