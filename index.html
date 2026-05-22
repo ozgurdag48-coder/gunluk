@@ -241,7 +241,7 @@
         /* Paneller */
         .filter-panel {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 30px;
             background: #f8fafc;
             padding: 20px;
@@ -252,7 +252,7 @@
 
         .filter-group {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
         }
 
         /* Tablo Tasarımı */
@@ -422,7 +422,7 @@
         </div>
 
         <div id="rapor-sayfasi" class="page">
-            <h2>Raporlama ve Analiz</h2>
+            <h2>Raporlama ve Analiz (Ortak Bulut Havuzu)</h2>
              
             <div class="filter-panel">
                 <div class="filter-group">
@@ -435,7 +435,10 @@
                 </div>
                 <div class="filter-group" id="tarihFiltreGrup">
                     <label id="tarihLabel" for="filtreTarih">Tarih Seçimi</label>
-                    <input type="date" id="filtreTarih" onchange="listeleRapor()">
+                    <input type="date" id="filtreTarih">
+                </div>
+                <div>
+                    <button class="btn" id="raporAlButon" onclick="listeleRaporCanli()">🔍 Rapor Al</button>
                 </div>
                 <div>
                     <button class="btn btn-success" onclick="raporuDisaAktar()">📥 Raporu Dışa Aktar</button>
@@ -453,7 +456,9 @@
                             <th>Mesai Detayı</th>
                         </tr>
                     </thead>
-                    <tbody id="raporDataBody"></tbody>
+                    <tbody id="raporDataBody">
+                        <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 30px;">Lütfen parametreleri seçip "Rapor Al" butonuna basın.</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -486,8 +491,11 @@
     </div>
 
     <script>
-        // 🚀 ADIM 1'DE KOPYALADIĞINIZ URL ADRESİNİ BURAYA YAPIŞTIRIN:
-        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVOKCucWsk56fpCMLJk2vBdwV2x1icWoBCJyXUU_4aMZxbjGCKQUZh1Yw8APftwayjlA/exec";
+        // 🚀 APPS SCRIPT WEB APP LINKINIZI BURAYA EKLEYIN:
+        const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/library/d/1Hd_B0sdgV1gjfn6GQqzOeunrqnJ4Gk7tFKvGG5pyjtJzgv42c_o7jM3D/2";
+
+        // Dışa aktarma fonksiyonunun güncel ve filtrelenmiş veriye erişmesi için global dizi
+        let canliRaporVerisi = [];
 
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById('isTarihi').valueAsDate = new Date();
@@ -526,9 +534,7 @@
                 element.classList.add('active');
             }
 
-            if (pageId === 'rapor-sayfasi') {
-                listeleRapor();
-            } else if (pageId === 'yonetim-sayfasi') {
+            if (pageId === 'yonetim-sayfasi') {
                 listeleYonetim();
             }
         }
@@ -576,22 +582,20 @@
                 mesaiDetay: mesaiKalindi ? mesaiDetay : '-'
             };
 
-            // Butonu kilitle ve durumu kullanıcıya göster
             const btn = document.getElementById('kayitButon');
             const eskiButonIcerik = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = "⏳ Google Drive'a Senkronize Ediliyor...";
 
-            // 1. Mevcut sisteme (Yerele) Kayıt
+            // Yerel kayıt yedekleme amacıyla kalıyor
             const db = getDatabase();
             db.push(yeniKayit);
             saveDatabase(db);
 
-            // 2. Google Drive'a (Sheets) Eşzamanlı Gönderim
             if(GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL !== "SİZİN_GOOGLE_APPS_SCRIPT_URL_ADRESİNİZ") {
                 fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // CORS politikalarını aşmak için güvenli mod
+                    mode: 'no-cors',
                     cache: 'no-cache',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(yeniKayit)
@@ -600,21 +604,19 @@
                     showNotification("İşlem başarıyla kaydedildi ve Google Drive'a senkronize edildi!");
                 })
                 .catch(err => {
-                    console.error("Drive Senkronizasyon Hatası:", err);
-                    showNotification("Veri cihaza kaydedildi ancak Drive'a ulaştırılamadı (İnternet yok?).");
+                    console.error("Drive Hatası:", err);
+                    showNotification("Veri cihaza kaydedildi ancak Drive bulutuna ulaştırılamadı.");
                 })
                 .finally(() => {
                     btn.disabled = false;
                     btn.innerHTML = eskiButonIcerik;
                 });
             } else {
-                // Eğer URL girilmemişse normal çalışmaya devam etsin
                 showNotification("İşlem yerel hafızaya kaydedildi (Google Drive URL eksik).");
                 btn.disabled = false;
                 btn.innerHTML = eskiButonIcerik;
             }
 
-            // Formu sıfırla
             document.getElementById('isKayitFormu').reset();
             document.getElementById('isTarihi').valueAsDate = new Date();
             document.getElementById('mesaiDetayPanel').style.display = 'none';
@@ -627,7 +629,7 @@
             notif.style.display = 'block';
             setTimeout(() => {
                 notif.style.display = 'none';
-            }, 3500); // Drive geri bildirimi için süreyi hafifçe uzattık
+            }, 3500);
         }
 
         function filtreGuncelle() {
@@ -652,50 +654,76 @@
                     filtreTarih.value = bugun.getFullYear() + "-" + ay;
                 }
             }
-            listeleRapor();
+        }
+
+        // 🌟 DRIVE ÜZERİNDEN HERKESİN VERİSİNİ CANLI ÇEKEN YENİ FONKSİYON
+        function listeleRaporCanli() {
+            const tbody = document.getElementById('raporDataBody');
+            const btn = document.getElementById('raporAlButon');
+            
+            if(!tbody) return;
+
+            if(!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === "SİZİN_GOOGLE_APPS_SCRIPT_URL_ADRESİNİZ") {
+                alert("Lütfen kodun en başındaki GOOGLE_APPS_SCRIPT_URL alanına geçerli linkinizi girin!");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "⏳ Veriler Alınıyor...";
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#3b82f6; padding: 30px;">🔄 Google Drive'dan canlı veriler sorgulanıyor, lütfen bekleyin...</td></tr>`;
+
+            const filtreTipi = document.getElementById('filtreTipi').value;
+            const filtreTarihDeger = document.getElementById('filtreTarih').value;
+
+            fetch(GOOGLE_APPS_SCRIPT_URL)
+            .then(response => response.json())
+            .then(bulutVeritabani => {
+                // Tarihe göre sırala (Yeniler üstte)
+                bulutVeritabani.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
+
+                // İstenen filtrelere göre veriyi süz
+                canliRaporVerisi = bulutVeritabani.filter(kayit => {
+                    if (filtreTipi === 'tum') return true;
+                    if (!filtreTarihDeger) return true;
+                    if (filtreTipi === 'gunluk') return kayit.tarih === filtreTarihDeger;
+                    if (filtreTipi === 'aylik') return kayit.tarih.startsWith(filtreTarihDeger);
+                    return true;
+                });
+
+                tbody.innerHTML = '';
+
+                if (canliRaporVerisi.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 30px;">Seçilen kriterlere uygun hiçbir ortak kayıt bulunamadı.</td></tr>`;
+                    return;
+                }
+
+                // UI Elemanlarına veriyi bas
+                canliRaporVerisi.forEach(kayit => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><b>${formatTarihTR(kayit.tarih)}</b></td>
+                        <td>${kayit.katilimci}</td>
+                        <td>${kayit.isAciklama}</td>
+                        <td><span class="badge ${kayit.mesaiKalindi ? 'badge-yes' : 'badge-no'}">${kayit.mesaiKalindi ? 'Evet' : 'Hayır'}</span></td>
+                        <td>${kayit.mesaiDetay}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                console.error("Veri çekme hatası:", err);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ef4444; padding: 30px;">❌ Veriler yüklenemedi. İnternet bağlantınızı veya Apps Script yapılandırmanızı kontrol edin.</td></tr>`;
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = "🔍 Rapor Al";
+            });
         }
 
         function formatTarihTR(tarihDeger) {
             if(!tarihDeger) return "";
             const parca = tarihDeger.split('-');
             return parca.length === 3 ? `${parca[2]}.${parca[1]}.${parca[0]}` : tarihDeger;
-        }
-
-        function listeleRapor() {
-            const db = getDatabase();
-            const filtreTipi = document.getElementById('filtreTipi').value;
-            const filtreTarihDeger = document.getElementById('filtreTarih').value;
-            const tbody = document.getElementById('raporDataBody');
-             
-            if(!tbody) return;
-            tbody.innerHTML = '';
-             
-            db.sort((a, b) => new Date(b.tarih) - new Date(a.tarih));
-
-            const filtrelenmisVeri = db.filter(kayit => {
-                if (filtreTipi === 'tum') return true;
-                if (!filtreTarihDeger) return true;
-                if (filtreTipi === 'gunluk') return kayit.tarih === filtreTarihDeger;
-                if (filtreTipi === 'aylik') return kayit.tarih.startsWith(filtreTarihDeger);
-                return true;
-            });
-
-            if (filtrelenmisVeri.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding: 30px;">Kayıtlı veri bulunamadı.</td></tr>`;
-                return;
-            }
-
-            filtrelenmisVeri.forEach(kayit => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${formatTarihTR(kayit.tarih)}</b></td>
-                    <td>${kayit.katilimci}</td>
-                    <td>${kayit.isAciklama}</td>
-                    <td><span class="badge ${kayit.mesaiKalindi ? 'badge-yes' : 'badge-no'}">${kayit.mesaiKalindi ? 'Evet' : 'Hayır'}</span></td>
-                    <td>${kayit.mesaiDetay}</td>
-                `;
-                tbody.appendChild(tr);
-            });
         }
 
         function listeleYonetim() {
@@ -734,20 +762,20 @@
         }
 
         function kayitSil(id) {
-            if (confirm("Bu iş kaydını kalıcı olarak silmek istediğinize emin misiniz?\n(Not: Güvenlik nedeniyle bu işlem Google Sheet satırını silmez, sadece yerel raporu temizler.)")) {
+            if (confirm("Bu iş kaydını kalıcı olarak silmek istediğinize emin misiniz?\n(Not: Bu işlem sadece bu cihazdaki yerel geçmişi temizler.)")) {
                 let db = getDatabase();
                 db = db.filter(kayit => kayit.id !== id);
                 saveDatabase(db);
                  
                 listeleYonetim();
-                showNotification("Kayıt yerel hafızadan başarıyla silindi.");
+                showNotification("Kayıt cihazdan kaldırıldı.");
             }
         }
 
+        // 🌟 CANLI VERİLERİ CSV OLARAK DIŞA AKTARAN GÜNCEL FONKSİYON
         function raporuDisaAktar() {
-            const db = getDatabase();
-            if(db.length === 0) {
-                alert("Dışa aktarılacak veri bulunamadı.");
+            if(canliRaporVerisi.length === 0) {
+                alert("Dışa aktarmak için önce 'Rapor Al' butonu ile ekrana veri yüklemelisiniz.");
                 return;
             }
 
@@ -755,22 +783,13 @@
             csvContent += "Tarih;Katilimci;Yapilan Is;Mesai Durumu;Mesai Detayi\n";
 
             const filtreTipi = document.getElementById('filtreTipi').value;
-            const filtreTarihDeger = document.getElementById('filtreTarih').value;
 
-            const filtrelenmisVeri = db.filter(kayit => {
-                if (filtreTipi === 'tum') return true;
-                if (!filtreTarihDeger) return true;
-                if (filtreTipi === 'gunluk') return kayit.tarih === filtreTarihDeger;
-                if (filtreTipi === 'aylik') return kayit.tarih.startsWith(filtreTarihDeger);
-                return true;
-            });
-
-            filtrelenmisVeri.forEach(kayit => {
+            canliRaporVerisi.forEach(kayit => {
                 const temizIs = kayit.isAciklama.replace(/;/g, ',').replace(/\n/g, ' ');
                 const temizMesaiDetay = kayit.mesaiDetay.replace(/;/g, ',').replace(/\n/g, ' ');
                 const mesaiMetin = kayit.mesaiKalindi ? "Evet" : "Hayir";
 
-                csvContent += `${kayit.tarih};${kayit.katilimci};${temizIs};${mesaiMetin};${temizMesaiDetay}\n`;
+                csvContent += `${formatTarihTR(kayit.tarih)};${kayit.katilimci};${temizIs};${mesaiMetin};${temizMesaiDetay}\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -778,7 +797,7 @@
             const url = URL.createObjectURL(blob);
              
             link.setAttribute("href", url);
-            link.setAttribute("download", `Is_Takip_Raporu_${filtreTipi}.csv`);
+            link.setAttribute("download", `Ortak_Is_Takip_Raporu_${filtreTipi}.csv`);
             link.style.visibility = 'hidden';
              
             document.body.appendChild(link);
